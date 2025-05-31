@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Operations Centre - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --success-color: #34C759;
+            --warning-color: #FF9500;
+            --danger-color: #FF3B30;
+            --background: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #E5E5EA;
+            --shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            --purple: #AF52DE;
+            --indigo: #5856D6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--card-background);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .notification-badge {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: var(--danger-color);
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            background-color: var(--card-background);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            display: flex;
+            gap: 32px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tab {
+            padding: 16px 0;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Grid Layouts */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .full-width-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-background);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-icon {
+            font-size: 24px;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+            margin: 16px 0 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+
+        .stat-change.negative {
+            color: var(--danger-color);
+        }
+
+        /* Production Board */
+        .production-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .production-stage {
+            background-color: var(--background);
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 400px;
+        }
+
+        .stage-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stage-count {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .order-card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: move;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .order-card:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.02);
+        }
+
+        .order-card.priority {
+            border-color: var(--danger-color);
+        }
+
+        .order-card.vip {
+            border-color: var(--purple);
+        }
+
+        .order-number {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .order-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .order-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Worker Status Grid */
+        .worker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .worker-card {
+            background-color: var(--background);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .worker-card.active {
+            border-color: var(--success-color);
+            background-color: #E8F5E9;
+        }
+
+        .worker-card.break {
+            border-color: var(--warning-color);
+            background-color: #FFF3CD;
+        }
+
+        .worker-card.offline {
+            border-color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .worker-avatar {
+            width: 48px;
+            height: 48px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 0 auto 8px;
+        }
+
+        .worker-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .worker-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .worker-metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .worker-metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--background);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-fill.success {
+            background-color: var(--success-color);
+        }
+
+        .progress-fill.warning {
+            background-color: var(--warning-color);
+        }
+
+        .progress-fill.danger {
+            background-color: var(--danger-color);
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            font-size: 14px;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-danger {
+            background-color: #FFE5E5;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+
+        .alert-warning {
+            background-color: #FFF3CD;
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+
+        .alert-icon {
+            font-size: 24px;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: var(--text-secondary);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Material Stock Indicators */
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .stock-item {
+            background-color: var(--background);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .stock-item.low {
+            background-color: #FFE5E5;
+        }
+
+        .stock-material {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .stock-level {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .stock-unit {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Charts Placeholder */
+        .chart-container {
+            height: 300px;
+            background-color: var(--background);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Filters */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-background);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--card-background);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-close {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .nav-tabs {
+                padding: 0 16px;
+            }
+
+            .main-container {
+                padding: 16px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .production-board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Production Operations Centre</h1>
+            <div class="header-actions">
+                <div class="notification-badge">
+                    <span style="font-size: 24px;">🔔</span>
+                    <span class="badge">5</span>
+                </div>
+                <span style="font-size: 14px; color: var(--text-secondary);">Admin User</span>
+                <button class="btn btn-small">Export Report</button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab('production-floor')">Production Floor</div>
+        <div class="nav-tab" onclick="switchTab('capacity-planning')">Capacity Planning</div>
+        <div class="nav-tab" onclick="switchTab('order-pipeline')">Order Pipeline</div>
+        <div class="nav-tab" onclick="switchTab('quality-control')">Quality Control</div>
+        <div class="nav-tab" onclick="switchTab('performance')">Performance Analytics</div>
+        <div class="nav-tab" onclick="switchTab('inventory')">Materials & Inventory</div>
+        <div class="nav-tab" onclick="switchTab('communication')">Communication</div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Production Floor Tab -->
+        <div class="tab-content active" id="production-floor">
+            <!-- Key Metrics -->
+            <div class="dashboard-grid">
+                <div class="card stat-card">
+                    <div class="card-icon">📦</div>
+                    <div class="stat-label">Active Orders</div>
+                    <div class="stat-value" style="color: var(--primary-color);">47</div>
+                    <div class="stat-change positive">↑ 12% from yesterday</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-icon">👷</div>
+                    <div class="stat-label">Active Craftspeople</div>
+                    <div class="stat-value" style="color: var(--success-color);">12/15</div>
+                    <div class="stat-change">80% capacity</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-icon">⏱️</div>
+                    <div class="stat-label">Avg Production Time</div>
+                    <div class="stat-value" style="color: var(--warning-color);">3.2h</div>
+                    <div class="stat-change negative">↑ 0.3h from target</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-icon">🎯</div>
+                    <div class="stat-label">Daily Target</div>
+                    <div class="stat-value">68%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 68%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">⚠️</span>
+                        Active Alerts
+                    </h3>
+                </div>
+                <div class="alert alert-danger">
+                    <span class="alert-icon">🚨</span>
+                    <div>
+                        <strong>Low Stock Alert:</strong> Black Premium Leather running low (2 days supply remaining)
+                    </div>
+                    <button class="btn btn-danger btn-small" style="margin-left: auto;">Order Now</button>
+                </div>
+                <div class="alert alert-warning">
+                    <span class="alert-icon">⏰</span>
+                    <div>
+                        <strong>Rush Order:</strong> ORD-1247 needs priority handling - Due in 4 hours
+                    </div>
+                    <button class="btn btn-small" style="margin-left: auto;">Assign</button>
+                </div>
+            </div>
+
+            <!-- Production Board -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">📋</span>
+                        Live Production Board
+                    </h3>
+                    <div class="filter-bar">
+                        <select class="filter-select">
+                            <option>All Orders</option>
+                            <option>Rush Orders</option>
+                            <option>VIP Customers</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="production-board">
+                    <div class="production-stage">
+                        <div class="stage-header">
+                            <span>Received</span>
+                            <span class="stage-count">8</span>
+                        </div>
+                        <div class="order-card priority">
+                            <div class="order-number">ORD-1247 🚨</div>
+                            <div class="order-details">Castro | Size 42 | Black</div>
+                            <div class="order-time">2 hours ago</div>
+                        </div>
+                        <div class="order-card">
+                            <div class="order-number">ORD-1248</div>
+                            <div class="order-details">Oxford | Size 40 | Brown</div>
+                            <div class="order-time">3 hours ago</div>
+                        </div>
+                        <div class="order-card vip">
+                            <div class="order-number">ORD-1249 ⭐</div>
+                            <div class="order-details">Sneaker | Size 44 | White</div>
+                            <div class="order-time">4 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="production-stage">
+                        <div class="stage-header">
+                            <span>Cutting</span>
+                            <span class="stage-count">5</span>
+                        </div>
+                        <div class="order-card">
+                            <div class="order-number">ORD-1244</div>
+                            <div class="order-details">Derby | Size 43 | Tan</div>
+                            <div class="order-time">Started 30 min ago</div>
+                        </div>
+                        <div class="order-card">
+                            <div class="order-number">ORD-1245</div>
+                            <div class="order-details">Loafer | Size 41 | Navy</div>
+                            <div class="order-time">Started 45 min ago</div>
+                        </div>
+                    </div>
+                    <div class="production-stage">
+                        <div class="stage-header">
+                            <span>Stitching</span>
+                            <span class="stage-count">6</span>
+                        </div>
+                        <div class="order-card">
+                            <div class="order-number">ORD-1240</div>
+                            <div class="order-details">Chelsea | Size 42 | Black</div>
+                            <div class="order-time">Started 1 hour ago</div>
+                        </div>
+                        <div class="order-card vip">
+                            <div class="order-number">ORD-1241 ⭐</div>
+                            <div class="order-details">Brogue | Size 45 | Brown</div>
+                            <div class="order-time">Started 1.5 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="production-stage">
+                        <div class="stage-header">
+                            <span>Lasting</span>
+                            <span class="stage-count">4</span>
+                        </div>
+                        <div class="order-card">
+                            <div class="order-number">ORD-1238</div>
+                            <div class="order-details">Oxford | Size 40 | Black</div>
+                            <div class="order-time">Started 2 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="production-stage">
+                        <div class="stage-header">
+                            <span>Finishing</span>
+                            <span class="stage-count">3</span>
+                        </div>
+                        <div class="order-card">
+                            <div class="order-number">ORD-1235</div>
+                            <div class="order-details">Sneaker | Size 43 | White</div>
+                            <div class="order-time">Almost complete</div>
+                        </div>
+                    </div>
+                    <div class="production-stage">
+                        <div class="stage-header">
+                            <span>Quality Check</span>
+                            <span class="stage-count">2</span>
+                        </div>
+                        <div class="order-card">
+                            <div class="order-number">ORD-1233</div>
+                            <div class="order-details">Castro | Size 41 | Brown</div>
+                            <div class="order-time">Ready for inspection</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Craftsperson Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">👥</span>
+                        Craftsperson Status
+                    </h3>
+                </div>
+                <div class="worker-grid">
+                    <div class="worker-card active">
+                        <div class="worker-avatar">MR</div>
+                        <div class="worker-name">Maria Rodriguez</div>
+                        <div class="worker-status">Working on ORD-1240</div>
+                        <div class="worker-metrics">
+                            <div class="worker-metric">
+                                <div class="metric-value">1.2</div>
+                                <div class="metric-label">pairs/hr</div>
+                            </div>
+                            <div class="worker-metric">
+                                <div class="metric-value">6</div>
+                                <div class="metric-label">today</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="worker-card active">
+                        <div class="worker-avatar">JC</div>
+                        <div class="worker-name">John Chen</div>
+                        <div class="worker-status">Working on ORD-1241</div>
+                        <div class="worker-metrics">
+                            <div class="worker-metric">
+                                <div class="metric-value">0.9</div>
+                                <div class="metric-label">pairs/hr</div>
+                            </div>
+                            <div class="worker-metric">
+                                <div class="metric-value">5</div>
+                                <div class="metric-label">today</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="worker-card break">
+                        <div class="worker-avatar">AH</div>
+                        <div class="worker-name">Ahmed Hassan</div>
+                        <div class="worker-status">On break (15 min)</div>
+                        <div class="worker-metrics">
+                            <div class="worker-metric">
+                                <div class="metric-value">1.1</div>
+                                <div class="metric-label">pairs/hr</div>
+                            </div>
+                            <div class="worker-metric">
+                                <div class="metric-value">4</div>
+                                <div class="metric-label">today</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="worker-card active">
+                        <div class="worker-avatar">SK</div>
+                        <div class="worker-name">Sarah Kim</div>
+                        <div class="worker-status">Working on ORD-1244</div>
+                        <div class="worker-metrics">
+                            <div class="worker-metric">
+                                <div class="metric-value">1.3</div>
+                                <div class="metric-label">pairs/hr</div>
+                            </div>
+                            <div class="worker-metric">
+                                <div class="metric-value">7</div>
+                                <div class="metric-label">today</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="worker-card offline">
+                        <div class="worker-avatar">TJ</div>
+                        <div class="worker-name">Tom Johnson</div>
+                        <div class="worker-status">Off duty</div>
+                        <div class="worker-metrics">
+                            <div class="worker-metric">
+                                <div class="metric-value">-</div>
+                                <div class="metric-label">pairs/hr</div>
+                            </div>
+                            <div class="worker-metric">
+                                <div class="metric-value">0</div>
+                                <div class="metric-label">today</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Material Stock Levels -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">📦</span>
+                        Material Stock Levels
+                    </h3>
+                    <button class="btn btn-small">Full Inventory</button>
+                </div>
+                <div class="stock-grid">
+                    <div class="stock-item low">
+                        <div class="stock-material">Black Leather</div>
+                        <div class="stock-level">12</div>
+                        <div class="stock-unit">sq meters</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill danger" style="width: 20%"></div>
+                        </div>
+                    </div>
+                    <div class="stock-item">
+                        <div class="stock-material">Brown Leather</div>
+                        <div class="stock-level">45</div>
+                        <div class="stock-unit">sq meters</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill success" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="stock-item">
+                        <div class="stock-material">Rubber Soles</div>
+                        <div class="stock-level">156</div>
+                        <div class="stock-unit">units</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill success" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="stock-item">
+                        <div class="stock-material">Waxed Laces</div>
+                        <div class="stock-level">89</div>
+                        <div class="stock-unit">pairs</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill warning" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="stock-item low">
+                        <div class="stock-material">Thread (Black)</div>
+                        <div class="stock-level">3</div>
+                        <div class="stock-unit">spools</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill danger" style="width: 15%"></div>
+                        </div>
+                    </div>
+                    <div class="stock-item">
+                        <div class="stock-material">Insoles</div>
+                        <div class="stock-level">234</div>
+                        <div class="stock-unit">pairs</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill success" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capacity Planning Tab -->
+        <div class="tab-content" id="capacity-planning">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📊</span>
+                            Demand Forecast
+                        </h3>
+                    </div>
+                    <div class="chart-container">
+                        [Demand Forecast Chart - Next 30/60/90 days]
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">👥</span>
+                            Capacity Utilization
+                        </h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Craftsperson</th>
+                                <th>Utilization</th>
+                                <th>Overtime</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Maria Rodriguez</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 95%"></div>
+                                    </div>
+                                    95%
+                                </td>
+                                <td>2.5 hrs</td>
+                            </tr>
+                            <tr>
+                                <td>John Chen</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 82%"></div>
+                                    </div>
+                                    82%
+                                </td>
+                                <td>0 hrs</td>
+                            </tr>
+                            <tr>
+                                <td>Ahmed Hassan</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill warning" style="width: 78%"></div>
+                                    </div>
+                                    78%
+                                </td>
+                                <td>0 hrs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">🎯</span>
+                        Capacity Planning Recommendations
+                    </h3>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">📈</span>
+                        <div>
+                            <strong>Overtime Required:</strong> Based on current demand, 12 hours of overtime will be needed this week
+                        </div>
+                    </div>
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">👥</span>
+                        <div>
+                            <strong>Hiring Recommendation:</strong> Consider hiring 2 additional craftspeople by next month
+                        </div>
+                    </div>
+                    <div class="alert alert-danger">
+                        <span class="alert-icon">🎄</span>
+                        <div>
+                            <strong>Seasonal Alert:</strong> Christmas demand spike expected in 6 weeks - prepare capacity
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Pipeline Tab -->
+        <div class="tab-content" id="order-pipeline">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">📋</span>
+                        Order Pipeline Management
+                    </h3>
+                    <div class="filter-bar">
+                        <select class="filter-select">
+                            <option>All Orders</option>
+                            <option>In Progress</option>
+                            <option>Delayed</option>
+                            <option>Rush Orders</option>
+                        </select>
+                        <input type="date" class="filter-select">
+                        <button class="btn btn-small">Apply Filters</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>ETA</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ORD-1247</strong> 🚨</td>
+                            <td>James Wilson</td>
+                            <td>Castro Black</td>
+                            <td><span style="color: var(--warning-color);">Cutting</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill warning" style="width: 25%"></div>
+                                </div>
+                            </td>
+                            <td style="color: var(--danger-color);">4 hours</td>
+                            <td>
+                                <button class="btn btn-small">Details</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>ORD-1246</strong></td>
+                            <td>Sarah Johnson ⭐</td>
+                            <td>Oxford Brown</td>
+                            <td><span style="color: var(--primary-color);">Stitching</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 50%"></div>
+                                </div>
+                            </td>
+                            <td>Tomorrow 2PM</td>
+                            <td>
+                                <button class="btn btn-small">Details</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>ORD-1245</strong></td>
+                            <td>Michael Brown</td>
+                            <td>Sneaker White</td>
+                            <td><span style="color: var(--success-color);">Finishing</span></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill success" style="width: 85%"></div>
+                                </div>
+                            </td>
+                            <td>Today 6PM</td>
+                            <td>
+                                <button class="btn btn-small">Details</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">⏱️</span>
+                            Lead Time Analysis
+                        </h3>
+                    </div>
+                    <div class="stat-value" style="text-align: center; color: var(--primary-color);">3.8 days</div>
+                    <div class="stat-label" style="text-align: center;">Average Lead Time</div>
+                    <table class="data-table">
+                        <tr>
+                            <td>Standard Orders</td>
+                            <td style="text-align: right;">4.2 days</td>
+                        </tr>
+                        <tr>
+                            <td>Rush Orders</td>
+                            <td style="text-align: right;">1.5 days</td>
+                        </tr>
+                        <tr>
+                            <td>Custom Orders</td>
+                            <td style="text-align: right;">6.8 days</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📞</span>
+                            Customer Communications
+                        </h3>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="stat-value" style="color: var(--success-color);">94%</div>
+                        <div class="stat-label">On-time Updates</div>
+                        <button class="btn btn-small" style="margin-top: 16px;">Send Batch Updates</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Control Tab -->
+        <div class="tab-content" id="quality-control">
+            <div class="dashboard-grid">
+                <div class="card stat-card">
+                    <div class="card-icon">✅</div>
+                    <div class="stat-label">Pass Rate</div>
+                    <div class="stat-value" style="color: var(--success-color);">96.5%</div>
+                    <div class="stat-change positive">↑ 2.1% from last month</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-icon">🔄</div>
+                    <div class="stat-label">Remake Rate</div>
+                    <div class="stat-value" style="color: var(--warning-color);">3.5%</div>
+                    <div class="stat-change negative">↑ 0.5% from target</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-icon">⭐</div>
+                    <div class="stat-label">Customer Satisfaction</div>
+                    <div class="stat-value">4.8/5</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill success" style="width: 96%"></div>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-icon">📸</div>
+                    <div class="stat-label">Photo Documentation</div>
+                    <div class="stat-value">89%</div>
+                    <div class="stat-change">Target: 100%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">🔍</span>
+                        Defect Analysis
+                    </h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Defect Type</th>
+                            <th>Occurrences</th>
+                            <th>Trend</th>
+                            <th>Primary Cause</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Stitching Issues</td>
+                            <td>12</td>
+                            <td style="color: var(--danger-color);">↑</td>
+                            <td>Machine calibration</td>
+                        </tr>
+                        <tr>
+                            <td>Color Mismatch</td>
+                            <td>5</td>
+                            <td style="color: var(--success-color);">↓</td>
+                            <td>Supplier variation</td>
+                        </tr>
+                        <tr>
+                            <td>Sizing Error</td>
+                            <td>3</td>
+                            <td style="color: var(--warning-color);">→</td>
+                            <td>Measurement error</td>
+                        </tr>
+                        <tr>
+                            <td>Finishing Defects</td>
+                            <td>8</td>
+                            <td style="color: var(--danger-color);">↑</td>
+                            <td>Rush orders</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn" style="margin-top: 16px;">Generate Quality Report</button>
+            </div>
+        </div>
+
+        <!-- Performance Analytics Tab -->
+        <div class="tab-content" id="performance">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">🎯</span>
+                        1-Pair-Per-Hour Target Tracking
+                    </h3>
+                </div>
+                <div class="chart-container">
+                    [Performance Chart - Individual & Team Performance Over Time]
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">🏆</span>
+                            Top Performers
+                        </h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Craftsperson</th>
+                                <th>Pairs/Hour</th>
+                                <th>Quality Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>🥇 Sarah Kim</td>
+                                <td style="color: var(--success-color); font-weight: 600;">1.3</td>
+                                <td>98%</td>
+                            </tr>
+                            <tr>
+                                <td>🥈 Maria Rodriguez</td>
+                                <td style="color: var(--success-color); font-weight: 600;">1.2</td>
+                                <td>97%</td>
+                            </tr>
+                            <tr>
+                                <td>🥉 Ahmed Hassan</td>
+                                <td style="color: var(--primary-color); font-weight: 600;">1.1</td>
+                                <td>96%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📈</span>
+                            Learning Curves
+                        </h3>
+                    </div>
+                    <div style="padding: 20px;">
+                        <p style="margin-bottom: 12px;"><strong>New Craftspeople Progress:</strong></p>
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Emily Chen (Week 3)</span>
+                                <span>0.7 pairs/hr</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill warning" style="width: 70%"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>David Park (Week 8)</span>
+                                <span>0.9 pairs/hr</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 90%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">💰</span>
+                        Production Cost Analysis
+                    </h3>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Cost Per Pair</div>
+                        <div class="stat-value">£127</div>
+                        <div class="stat-change positive">↓ £8 from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Labor Efficiency</div>
+                        <div class="stat-value">82%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 82%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Material Waste</div>
+                        <div class="stat-value">4.2%</div>
+                        <div class="stat-change">Target: < 5%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Materials & Inventory Tab -->
+        <div class="tab-content" id="inventory">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">📦</span>
+                        Inventory Overview
+                    </h3>
+                    <button class="btn">Order Materials</button>
+                </div>
+                <div class="filter-bar">
+                    <select class="filter-select">
+                        <option>All Materials</option>
+                        <option>Low Stock</option>
+                        <option>Leather</option>
+                        <option>Hardware</option>
+                        <option>Consumables</option>
+                    </select>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Current Stock</th>
+                            <th>Min Level</th>
+                            <th>Days Supply</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Premium Black Leather</td>
+                            <td>12 sq m</td>
+                            <td>50 sq m</td>
+                            <td style="color: var(--danger-color); font-weight: 600;">2 days</td>
+                            <td><span style="color: var(--danger-color);">Critical</span></td>
+                            <td><button class="btn btn-danger btn-small">Order Now</button></td>
+                        </tr>
+                        <tr>
+                            <td>Brown Leather</td>
+                            <td>45 sq m</td>
+                            <td>30 sq m</td>
+                            <td>8 days</td>
+                            <td><span style="color: var(--success-color);">Good</span></td>
+                            <td><button class="btn btn-small btn-secondary">Schedule</button></td>
+                        </tr>
+                        <tr>
+                            <td>Rubber Soles (Size 42)</td>
+                            <td>156 units</td>
+                            <td>100 units</td>
+                            <td>12 days</td>
+                            <td><span style="color: var(--success-color);">Good</span></td>
+                            <td><button class="btn btn-small btn-secondary">Schedule</button></td>
+                        </tr>
+                        <tr>
+                            <td>Black Thread</td>
+                            <td>3 spools</td>
+                            <td>10 spools</td>
+                            <td style="color: var(--warning-color); font-weight: 600;">4 days</td>
+                            <td><span style="color: var(--warning-color);">Low</span></td>
+                            <td><button class="btn btn-small">Order</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📊</span>
+                            Material Consumption Trends
+                        </h3>
+                    </div>
+                    <div class="chart-container">
+                        [Material Usage Chart - Last 30 Days]
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">🚚</span>
+                            Supplier Performance
+                        </h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>On-Time</th>
+                                <th>Quality</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Premium Leather Co</td>
+                                <td>98%</td>
+                                <td>⭐⭐⭐⭐⭐</td>
+                            </tr>
+                            <tr>
+                                <td>Sole Suppliers Ltd</td>
+                                <td>92%</td>
+                                <td>⭐⭐⭐⭐</td>
+                            </tr>
+                            <tr>
+                                <td>Thread & Notions Inc</td>
+                                <td>87%</td>
+                                <td>⭐⭐⭐⭐</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communication Tab -->
+        <div class="tab-content" id="communication">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📅</span>
+                            Production Meetings
+                        </h3>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="alert alert-warning">
+                            <span class="alert-icon">📅</span>
+                            <div>
+                                <strong>Daily Stand-up:</strong> Today 9:00 AM - Production Floor
+                            </div>
+                        </div>
+                        <h4 style="margin: 20px 0 12px;">Recent Meeting Notes:</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                                <strong>June 28:</strong> Discussed new Castro model techniques
+                            </li>
+                            <li style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                                <strong>June 27:</strong> Material quality issues resolved with supplier
+                            </li>
+                            <li style="padding: 8px 0;">
+                                <strong>June 26:</strong> New hire training schedule confirmed
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">🔄</span>
+                            Shift Handover Log
+                        </h3>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 16px; padding: 12px; background-color: var(--background); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>Morning → Afternoon</strong>
+                                <span style="color: var(--text-secondary); font-size: 14px;">2:00 PM</span>
+                            </div>
+                            <p style="font-size: 14px; margin: 0;">ORD-1247 rush order in progress - cutting complete, stitching started. Machine #3 needs maintenance check.</p>
+                        </div>
+                        <button class="btn btn-small">Add Handover Note</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-icon">🛠️</span>
+                        Maintenance Schedule
+                    </h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Equipment</th>
+                            <th>Last Service</th>
+                            <th>Next Due</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Stitching Machine #1</td>
+                            <td>June 15</td>
+                            <td>July 15</td>
+                            <td><span style="color: var(--success-color);">Good</span></td>
+                        </tr>
+                        <tr>
+                            <td>Stitching Machine #3</td>
+                            <td>May 28</td>
+                            <td style="color: var(--danger-color); font-weight: 600;">June 28</td>
+                            <td><span style="color: var(--danger-color);">Overdue</span></td>
+                        </tr>
+                        <tr>
+                            <td>Lasting Machine</td>
+                            <td>June 20</td>
+                            <td>July 20</td>
+                            <td><span style="color: var(--success-color);">Good</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">🏥</span>
+                            Health & Safety
+                        </h3>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="stat-value" style="color: var(--success-color);">156</div>
+                        <div class="stat-label">Days Without Incident</div>
+                        <button class="btn btn-danger btn-small" style="margin-top: 16px;">Report Incident</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📚</span>
+                            Training Schedule
+                        </h3>
+                    </div>
+                    <div style="padding: 16px;">
+                        <div class="alert alert-warning">
+                            <span class="alert-icon">📚</span>
+                            <div>
+                                <strong>Tomorrow:</strong> Advanced Castro Techniques Workshop - 2:00 PM
+                            </div>
+                        </div>
+                        <p style="margin-top: 16px;"><strong>Upcoming Sessions:</strong></p>
+                        <ul style="list-style: none; padding: 0; margin-top: 12px;">
+                            <li style="padding: 8px 0;">July 2: New Materials Handling</li>
+                            <li style="padding: 8px 0;">July 5: Quality Standards Review</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalContent">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('orderModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('orderModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Simulate real-time updates
+        function updateProductionData() {
+            // This would connect to your backend in a real implementation
+            console.log('Updating production data...');
+        }
+
+        // Update data every 30 seconds
+        setInterval(updateProductionData, 30000);
+
+        // Initialize tooltips and other interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to order cards
+            document.querySelectorAll('.order-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    openModal();
+                    // Load order details into modal
+                });
+            });
+
+            // Initialize drag and drop for production board
+            // This would be implemented with a library like Sortable.js in production
+        });
+    </script>
+</body>
+</html>
